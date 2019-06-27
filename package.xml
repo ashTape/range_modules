@@ -1,0 +1,22 @@
+<?xml version="1.0"?>
+<package>
+  <name>range_to_laserscan</name>
+  <version>0.0.0</version>
+  <description>A package for converting sensor_msgs::Range to sensor_msgs::LaserScan</description>
+
+  <maintainer email="shotaro.akima01@g.softbank.co.jp">ashotaro</maintainer>
+
+  <license>Apache License, Version2.0</license>
+  <author email="shotaro.akima01@g.softbank.co.jp">ashotaro</author>
+
+  <buildtool_depend>catkin</buildtool_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>roscpp</run_depend>
+
+  <test_depend>roslaunch</test_depend>
+  <!-- The export tag contains other, unspecified, tags -->
+  <export>
+    <!-- Other tools can request additional information be placed here -->
+
+  </export>
+</package>
