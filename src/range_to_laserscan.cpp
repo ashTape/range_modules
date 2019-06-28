@@ -39,25 +39,24 @@ private:
     // }
   }
 public:
-  RangeToLaserScan(std::string name){
+  RangeToLaserScan(std::string range_topic){
     pub_ = nh_.advertise<sensor_msgs::LaserScan>("/scan_sonar", 10);
-    sub_ = nh_.subscribe(name.c_str(), 10, &RangeToLaserScan::callback, this);
+    sub_ = nh_.subscribe(range_topic, 10, &RangeToLaserScan::callback, this);
   }
-
 };//End of class
 
 int main(int argc, char **argv){
   ros::init(argc, argv, "range_to_laserscan");
   ros::NodeHandle nh;
   
-  std::vector<std::string> default_topic = {"/range"};
-  std::vector<std::string> sonar_topics = nh.param<std::vector<std::string>>("/range_to_laserscan/range_topics" , default_topic);
+  std::vector<std::string> sub_topic = {"/range"};
+  std::vector<std::string> range_topics = nh.param<std::vector<std::string>>("/range_to_laserscan/range_topics" , sub_topic);
 
   std::vector<RangeToLaserScan> RTL;
 
-  for(int i=0;i<sonar_topics.size();i++){
-    ROS_INFO("Initialize functions for %s", sonar_topics[i].c_str());
-    RangeToLaserScan obj(sonar_topics[i].c_str());
+  for(int i=0;i<range_topics.size();i++){
+    ROS_INFO("Initialize range_to_laserscan functions for %s", range_topics[i].c_str());
+    RangeToLaserScan obj(range_topics[i]);
     RTL.push_back(obj);
   }
 
