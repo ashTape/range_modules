@@ -13,7 +13,7 @@ private:
 
 public:
   RangeToLaserScan(){}
-  RangeToLaserScan(ros::NodeHandle nh, ros::Publisher pub, const std::string range_topic){
+  RangeToLaserScan(ros::NodeHandle& nh, ros::Publisher& pub, const std::string& range_topic){
     sub_ = nh.subscribe(range_topic, 10, &RangeToLaserScan::callback, this);
     pub_ = pub;
     initSonarLaserScan();
@@ -70,7 +70,8 @@ int main(int argc, char **argv){
   pub = nh.advertise<sensor_msgs::LaserScan>("/scan_sonar",10);
   
   std::vector<std::string> sub_topic = {"/range"};
-  std::vector<std::string> range_topics = nh.param<std::vector<std::string>>("/range_to_laserscan/range_topics" , sub_topic);
+  std::vector<std::string> range_topics = nh.param<std::vector<std::string>>(ros::this_node::getName() + "/range_topics" , {"/range_topic"});
+//std::vector<std::string> range_topics = nh.param<std::vector<std::string>>("/range_topics" , sub_topic);
 
   std::vector<RangeToLaserScan*> RTL(range_topics.size());
 
