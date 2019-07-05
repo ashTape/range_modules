@@ -2,7 +2,7 @@
     <arg name="range_topics"    default="[/sonar/left_side, /sonar/left_oblique, /sonar/left_front, /sonar/right_front, /sonar/right_oblique, /sonar/right_side]" />
     <!-- <arg name="range_topics"    default="[/sonar/left_side]"/> -->
 
-    <node name="range_to_laserscan" pkg="range_to_laserscan" type="range_to_laserscan" output="screen">
+    <node name="range_to_laserscan" pkg="range_modules" type="range_to_laserscan" output="screen">
         <!-- <param name="range_topics"  value=$(arg range_topics)/> -->
         <rosparam param="range_topics" subst_value="True">
             $(arg range_topics)
