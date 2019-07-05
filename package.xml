@@ -1,25 +1,20 @@
 <?xml version="1.0"?>
-<package>
+<package format="2">
   <name>range_modules</name>
-  <version>0.0.0</version>
-  <description>A package for converting sensor_msgs::Range to sensor_msgs::LaserScan</description>
-
-  <maintainer email="shotaro.akima01@g.softbank.co.jp">ashotaro</maintainer>
-
-  <license>Apache License, Version2.0</license>
+  <version>0.1.1</version>
+  <description>
+          A package for control of sensor_msgs::Range
+  </description>
+  <license>Apache 2.0</license>
   <author email="shotaro.akima01@g.softbank.co.jp">ashotaro</author>
-
+  <maintainer email="shotaro.akima01@g.softbank.co.jp">ashotaro</maintainer>
+    
   <buildtool_depend>catkin</buildtool_depend>
-  <run_depend>roscpp</run_depend>
-  <run_depend>sensor_msgs</run_depend>
-  <run_depend>geometry_msgs</run_depend>
-  <run_depend>tf2</run_depend>
-  <run_depend>tf2_ros</run_depend>
+  
+  <depend>roscpp</depend>
+  <depend>sensor_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>tf2</depend>
+  <depend>tf2_ros</depend>
 
-  <test_depend>roslaunch</test_depend>
-  <!-- The export tag contains other, unspecified, tags -->
-  <export>
-    <!-- Other tools can request additional information be placed here -->
-
-  </export>
 </package>
