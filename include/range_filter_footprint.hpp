@@ -21,7 +21,6 @@ private:
     geometry_msgs::TransformStamped tf_sonar_; 
     std::string frame_; 
     float offset_; 
-    int counter_, counter_footprint_; 
  
 public: 
     RangeFilterFootprint(){} 
@@ -35,8 +34,6 @@ public:
         tf_sonar_ = RF.tf_sonar_; 
         frame_ = RF.frame_; 
         offset_ = RF.offset_; 
-        counter_ = RF.counter_; 
-        counter_footprint_ = RF.counter_footprint_; 
     } 
  
     RangeFilterFootprint(const ros::NodeHandle &nh, const std::string &range_topic, const std::string &footprint_topic){ //Constructor 
@@ -45,9 +42,6 @@ public:
         pub_ = nh_.advertise<sensor_msgs::Range>(range_topic + "_filtered", 10); 
         sub_footprint_ = nh_.subscribe(footprint_topic, 10, &RangeFilterFootprint::callbackFootprint, this); 
          
-        counter_ = 0; 
-        counter_footprint_ = 0; 
-     
         tf2_ros::Buffer tfBuffer_; 
         tf2_ros::TransformListener tfListener_(tfBuffer_); 
  
@@ -60,32 +54,23 @@ public:
  
     void callback(const sensor_msgs::Range::ConstPtr &msg){ 
         if(msg != NULL){ 
-            if(counter_footprint_ != 0){ 
-                if(counter_ == 0){ 
-                    frame_ = msg -> header.frame_id.substr(1); //exclude "/" 
-                    setSonarTF(); 
-                    setOffset(); 
-                    counter_ ++; 
-                    ROS_INFO("%s offset : %f", frame_.c_str(), offset_); 
-                } 
+            frame_ = msg -> header.frame_id.substr(1); //exclude "/" 
+            setSonarTF(); 
+            setOffset(); 
             range_msg_ = *msg; 
             publish(); 
             } 
-        } 
     } 
  
     void callbackFootprint(const geometry_msgs::PolygonStamped::ConstPtr &msg){ 
-        if (msg != NULL){ 
-            if (counter_footprint_ == 0){ 
-                footprint_ = *msg; 
-                counter_footprint_ ++; 
-            } 
-        } 
+        footprint_ = *msg; 
     } 
  
     sensor_msgs::Range filterFootprint(const sensor_msgs::Range &msg){ 
         sensor_msgs::Range range_filtered_ = msg; 
-        range_filtered_.range -= offset_; 
+        if (range_filtered_.range <= offset_){
+            range_filtered_.range = offset_; 
+        }
         return range_filtered_; 
     } 
  
