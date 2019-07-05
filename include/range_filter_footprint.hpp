@@ -12,6 +12,7 @@
 #include <geometry_msgs/PolygonStamped.h>
 
 class RangeFilterFootprint{ 
+private:
     ros::NodeHandle nh_; 
     ros::Subscriber sub_, sub_footprint_; 
     ros::Publisher pub_; 
