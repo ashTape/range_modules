@@ -1,6 +1,6 @@
 <?xml version="1.0"?>
 <package>
-  <name>range_to_laserscan</name>
+  <name>range_modules</name>
   <version>0.0.0</version>
   <description>A package for converting sensor_msgs::Range to sensor_msgs::LaserScan</description>
 
@@ -10,8 +10,11 @@
   <author email="shotaro.akima01@g.softbank.co.jp">ashotaro</author>
 
   <buildtool_depend>catkin</buildtool_depend>
-  <run_depend>sensor_msgs</run_depend>
   <run_depend>roscpp</run_depend>
+  <run_depend>sensor_msgs</run_depend>
+  <run_depend>geometry_msgs</run_depend>
+  <run_depend>tf2</run_depend>
+  <run_depend>tf2_ros</run_depend>
 
   <test_depend>roslaunch</test_depend>
   <!-- The export tag contains other, unspecified, tags -->
