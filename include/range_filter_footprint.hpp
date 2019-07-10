@@ -27,14 +27,14 @@ public:
   void callback(const geometry_msgs::PolygonStamped::ConstPtr &);
   int getCounter();
   geometry_msgs::PolygonStamped getFootprint();
-};//End of class
+}; // End of class
 
 class RangeFilterFootprint {
 private:
   ros::NodeHandle nh_;
   ros::Subscriber sub_;
   ros::Publisher pub_;
-  SubFootprint SF_;
+  SubFootprint *pSF_;
   sensor_msgs::Range range_msg_;
   geometry_msgs::PolygonStamped footprint_;
   geometry_msgs::TransformStamped tf_sonar_;
@@ -44,15 +44,16 @@ private:
 
 public:
   RangeFilterFootprint() {}
-  ~RangeFilterFootprint() {delete &SF_;}
-  RangeFilterFootprint(const ros::NodeHandle &, const std::string &, const SubFootprint &);
+  ~RangeFilterFootprint() { delete pSF_; }
+  RangeFilterFootprint(const ros::NodeHandle &, const std::string &,
+                       SubFootprint &);
   RangeFilterFootprint(const RangeFilterFootprint &);
   void publish();
   void callback(const sensor_msgs::Range::ConstPtr &);
   sensor_msgs::Range filterFootprint(const sensor_msgs::Range &);
   void setSonarTF();
   void setThreshold();
-};//End of class
+}; // End of class
 
 SubFootprint::SubFootprint(const ros::NodeHandle &nh,
                            const std::string &footprint_topic) {
@@ -77,12 +78,13 @@ geometry_msgs::PolygonStamped SubFootprint::getFootprint() {
   return footprint_;
 }
 
-RangeFilterFootprint::RangeFilterFootprint(
-    const ros::NodeHandle &nh, const std::string &range_topic, const SubFootprint &SF) { // Constructor
+RangeFilterFootprint::RangeFilterFootprint(const ros::NodeHandle &nh,
+                                           const std::string &range_topic,
+                                           SubFootprint &SF) { // Constructor
   nh_ = nh;
   sub_ = nh_.subscribe(range_topic, 10, &RangeFilterFootprint::callback, this);
   pub_ = nh_.advertise<sensor_msgs::Range>(range_topic + "_filtered", 10);
-  SF_ = SF;
+  pSF_ = &SF;
   counter_ = 0;
 
   tf2_ros::Buffer tfBuffer_;
@@ -95,6 +97,7 @@ RangeFilterFootprint::RangeFilterFootprint(
   nh_ = RF.nh_;
   sub_ = RF.sub_;
   pub_ = RF.pub_;
+  pSF_ = RF.pSF_;
   range_msg_ = RF.range_msg_;
   footprint_ = RF.footprint_;
   tf_sonar_ = RF.tf_sonar_;
@@ -108,10 +111,10 @@ void RangeFilterFootprint::publish() {
 }
 void RangeFilterFootprint::callback(const sensor_msgs::Range::ConstPtr &msg) {
   if (msg != nullptr) {
-    if (SF_.getCounter() != 0) {
+    if (pSF_->getCounter() != 0) {
       if (counter_ == 0) {
         frame_ = msg->header.frame_id.substr(1); // exclude "/"
-        footprint_ = SF_.getFootprint();
+        footprint_ = pSF_->getFootprint();
         setSonarTF();
         setThreshold();
         counter_++;
