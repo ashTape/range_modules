@@ -4,6 +4,8 @@ int main(int argc, char **argv) {
   ros::init(argc, argv, "range_filter_footprint");
   ros::NodeHandle nh;
   ros::Rate rate(40);
+  tf2_ros::Buffer tfBuffer;
+  tf2_ros::TransformListener tfListener(tfBuffer);
 
   std::string footprint_topic = nh.param<std::string>(
       ros::this_node::getName() + "/footprint_topic", "/footprint");
@@ -13,7 +15,7 @@ int main(int argc, char **argv) {
   range_filter_footprint::SubFootprint SF(nh, footprint_topic);
 
   for (int i = 0; i < range_topics.size(); i++)
-    RFF[i] = new range_filter_footprint::RangeFilterFootprint(nh, range_topics[i], SF);
+    RFF[i] = new range_filter_footprint::RangeFilterFootprint(nh, range_topics[i], SF, tfBuffer);
 
   ros::spin();
 };

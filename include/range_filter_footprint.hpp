@@ -1,15 +1,15 @@
 #ifndef RANGE_FILTER_FOOTPRINT
 #define RANGE_FILTER_FOOTPRINT
 
-#include <ros/ros.h>
-#include <cmath>
-#include <sensor_msgs/Range.h>
-#include <tf/tf.h>
-#include <tf2_ros/transform_listener.h>
-#include <tf2/LinearMath/Quaternion.h>
-#include <geometry_msgs/TransformStamped.h>
-#include <tf2_geometry_msgs/tf2_geometry_msgs.h>
-#include <geometry_msgs/PolygonStamped.h>
+#include "ros/ros.h"
+#include "cmath"
+#include "sensor_msgs/Range.h"
+#include "tf/tf.h"
+#include "tf2_ros/transform_listener.h"
+#include "tf2/LinearMath/Quaternion.h"
+#include "geometry_msgs/TransformStamped.h"
+#include "tf2_geometry_msgs/tf2_geometry_msgs.h"
+#include "geometry_msgs/PolygonStamped.h"
 
 namespace range_filter_footprint {
 
@@ -38,6 +38,7 @@ private:
   sensor_msgs::Range range_msg_;
   geometry_msgs::PolygonStamped footprint_;
   geometry_msgs::TransformStamped tf_sonar_;
+  tf2_ros::Buffer *ptfBuffer_;
   std::string frame_;
   float threshold_;
   int counter_;
@@ -46,9 +47,9 @@ public:
   RangeFilterFootprint() {}
   ~RangeFilterFootprint() { delete pSF_; }
   RangeFilterFootprint(const ros::NodeHandle &, const std::string &,
-                       SubFootprint &);
+                       SubFootprint &, tf2_ros::Buffer &);
   RangeFilterFootprint(const RangeFilterFootprint &);
-  RangeFilterFootprint& operator=(const RangeFilterFootprint&);
+  RangeFilterFootprint &operator=(const RangeFilterFootprint &);
   void publish();
   void callback(const sensor_msgs::Range::ConstPtr &);
   sensor_msgs::Range filterFootprint(const sensor_msgs::Range &);
@@ -75,19 +76,19 @@ void SubFootprint::callback(
 
 int SubFootprint::getCounter() const { return counter_footprint_; }
 
-geometry_msgs::PolygonStamped SubFootprint::getFootprint() const {return footprint_;}
+geometry_msgs::PolygonStamped SubFootprint::getFootprint() const {
+  return footprint_;
+}
 
-RangeFilterFootprint::RangeFilterFootprint(const ros::NodeHandle &nh,
-                                           const std::string &range_topic,
-                                           SubFootprint &SF) { // Constructor
+RangeFilterFootprint::RangeFilterFootprint(
+    const ros::NodeHandle &nh, const std::string &range_topic, SubFootprint &SF,
+    tf2_ros::Buffer &tfBuffer_) { // Constructor
   nh_ = nh;
   sub_ = nh_.subscribe(range_topic, 10, &RangeFilterFootprint::callback, this);
   pub_ = nh_.advertise<sensor_msgs::Range>(range_topic + "_filtered", 10);
   pSF_ = &SF;
+  ptfBuffer_ = &tfBuffer_;
   counter_ = 0;
-
-  tf2_ros::Buffer tfBuffer_;
-  tf2_ros::TransformListener tfListener_(tfBuffer_);
 
 } // End of Constructor
 
@@ -105,9 +106,14 @@ RangeFilterFootprint::RangeFilterFootprint(
   counter_ = RF.counter_;
 } // End of Copy Constructor
 
-RangeFilterFootprint& RangeFilterFootprint::operator=(const RangeFilterFootprint &RFF){return *this;}
+RangeFilterFootprint &RangeFilterFootprint::
+operator=(const RangeFilterFootprint &RFF) {
+  return *this;
+}
 
-void RangeFilterFootprint::publish() {pub_.publish(filterFootprint(range_msg_));}
+void RangeFilterFootprint::publish() {
+  pub_.publish(filterFootprint(range_msg_));
+}
 
 void RangeFilterFootprint::callback(const sensor_msgs::Range::ConstPtr &msg) {
   if (msg != nullptr) {
@@ -137,12 +143,10 @@ RangeFilterFootprint::filterFootprint(const sensor_msgs::Range &msg) {
 }
 
 void RangeFilterFootprint::setSonarTF() {
-  tf2_ros::Buffer tfBuffer_;
-  tf2_ros::TransformListener tfListener_(tfBuffer_);
   while (ros::ok()) {
     try {
-      tf_sonar_ = tfBuffer_.lookupTransform(footprint_.header.frame_id, frame_,
-                                            ros::Time(0), ros::Duration(3.0));
+      tf_sonar_ = ptfBuffer_->lookupTransform(
+          footprint_.header.frame_id, frame_, ros::Time(0), ros::Duration(3.0));
     } catch (tf2::TransformException &ex) {
       ROS_WARN("%s", ex.what());
       ros::Duration(1).sleep();
