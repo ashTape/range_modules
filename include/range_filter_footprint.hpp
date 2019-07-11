@@ -25,8 +25,8 @@ public:
   ~SubFootprint() { ROS_INFO("Finigh Getting Footprint"); };
   SubFootprint(const ros::NodeHandle &, const std::string &);
   void callback(const geometry_msgs::PolygonStamped::ConstPtr &);
-  int getCounter();
-  geometry_msgs::PolygonStamped getFootprint();
+  int getCounter() const;
+  geometry_msgs::PolygonStamped getFootprint() const;
 }; // End of class
 
 class RangeFilterFootprint {
@@ -48,6 +48,7 @@ public:
   RangeFilterFootprint(const ros::NodeHandle &, const std::string &,
                        SubFootprint &);
   RangeFilterFootprint(const RangeFilterFootprint &);
+  RangeFilterFootprint& operator=(const RangeFilterFootprint&);
   void publish();
   void callback(const sensor_msgs::Range::ConstPtr &);
   sensor_msgs::Range filterFootprint(const sensor_msgs::Range &);
@@ -72,11 +73,9 @@ void SubFootprint::callback(
   }
 }
 
-int SubFootprint::getCounter() { return counter_footprint_; }
+int SubFootprint::getCounter() const { return counter_footprint_; }
 
-geometry_msgs::PolygonStamped SubFootprint::getFootprint() {
-  return footprint_;
-}
+geometry_msgs::PolygonStamped SubFootprint::getFootprint() const {return footprint_;}
 
 RangeFilterFootprint::RangeFilterFootprint(const ros::NodeHandle &nh,
                                            const std::string &range_topic,
@@ -106,9 +105,10 @@ RangeFilterFootprint::RangeFilterFootprint(
   counter_ = RF.counter_;
 } // End of Copy Constructor
 
-void RangeFilterFootprint::publish() {
-  pub_.publish(filterFootprint(range_msg_));
-}
+RangeFilterFootprint& RangeFilterFootprint::operator=(const RangeFilterFootprint &RFF){return *this;}
+
+void RangeFilterFootprint::publish() {pub_.publish(filterFootprint(range_msg_));}
+
 void RangeFilterFootprint::callback(const sensor_msgs::Range::ConstPtr &msg) {
   if (msg != nullptr) {
     if (pSF_->getCounter() != 0) {
