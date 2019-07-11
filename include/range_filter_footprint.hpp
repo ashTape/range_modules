@@ -15,7 +15,6 @@ namespace range_filter_footprint {
 
 class SubFootprint {
 private:
-  ros::NodeHandle nh_;
   ros::Subscriber sub_;
   geometry_msgs::PolygonStamped footprint_;
   int counter_footprint_;
@@ -23,7 +22,7 @@ private:
 public:
   SubFootprint(){};
   ~SubFootprint() { ROS_INFO("Finigh Getting Footprint"); };
-  SubFootprint(const ros::NodeHandle &, const std::string &);
+  SubFootprint(ros::NodeHandle &, const std::string &);
   void callback(const geometry_msgs::PolygonStamped::ConstPtr &);
   int getCounter() const;
   geometry_msgs::PolygonStamped getFootprint() const;
@@ -31,7 +30,6 @@ public:
 
 class RangeFilterFootprint {
 private:
-  ros::NodeHandle nh_;
   ros::Subscriber sub_;
   ros::Publisher pub_;
   SubFootprint *pSF_;
@@ -46,7 +44,7 @@ private:
 public:
   RangeFilterFootprint() {}
   ~RangeFilterFootprint() { delete pSF_; }
-  RangeFilterFootprint(const ros::NodeHandle &, const std::string &,
+  RangeFilterFootprint(ros::NodeHandle &, const std::string &,
                        SubFootprint &, tf2_ros::Buffer &);
   RangeFilterFootprint(const RangeFilterFootprint &);
   RangeFilterFootprint &operator=(const RangeFilterFootprint &);
@@ -57,10 +55,9 @@ public:
   void setThreshold();
 }; // End of class
 
-SubFootprint::SubFootprint(const ros::NodeHandle &nh,
+SubFootprint::SubFootprint(ros::NodeHandle &nh,
                            const std::string &footprint_topic) {
-  nh_ = nh;
-  sub_ = nh_.subscribe(footprint_topic, 10, &SubFootprint::callback, this);
+  sub_ = nh.subscribe(footprint_topic, 10, &SubFootprint::callback, this);
   counter_footprint_ = 0;
 };
 
@@ -81,11 +78,10 @@ geometry_msgs::PolygonStamped SubFootprint::getFootprint() const {
 }
 
 RangeFilterFootprint::RangeFilterFootprint(
-    const ros::NodeHandle &nh, const std::string &range_topic, SubFootprint &SF,
+    ros::NodeHandle &nh, const std::string &range_topic, SubFootprint &SF,
     tf2_ros::Buffer &tfBuffer_) { // Constructor
-  nh_ = nh;
-  sub_ = nh_.subscribe(range_topic, 10, &RangeFilterFootprint::callback, this);
-  pub_ = nh_.advertise<sensor_msgs::Range>(range_topic + "_filtered", 10);
+  sub_ = nh.subscribe(range_topic, 10, &RangeFilterFootprint::callback, this);
+  pub_ = nh.advertise<sensor_msgs::Range>(range_topic + "_filtered", 10);
   pSF_ = &SF;
   ptfBuffer_ = &tfBuffer_;
   counter_ = 0;
@@ -94,7 +90,6 @@ RangeFilterFootprint::RangeFilterFootprint(
 
 RangeFilterFootprint::RangeFilterFootprint(
     const RangeFilterFootprint &RF) { // Copy Constructor
-  nh_ = RF.nh_;
   sub_ = RF.sub_;
   pub_ = RF.pub_;
   pSF_ = RF.pSF_;
