@@ -40,14 +40,15 @@ private:
   std::string frame_;
   float threshold_;
   int counter_;
+  RangeFilterFootprint(const RangeFilterFootprint &); // Prohibit to copy
+  RangeFilterFootprint &
+  operator=(const RangeFilterFootprint &); // Prohibit to substitute
 
 public:
   RangeFilterFootprint() {}
   ~RangeFilterFootprint() { delete pSF_; }
   RangeFilterFootprint(ros::NodeHandle &, const std::string &,
                        SubFootprint &, tf2_ros::Buffer &);
-  RangeFilterFootprint(const RangeFilterFootprint &);
-  RangeFilterFootprint &operator=(const RangeFilterFootprint &);
   void publish();
   void callback(const sensor_msgs::Range::ConstPtr &);
   sensor_msgs::Range filterFootprint(const sensor_msgs::Range &);
