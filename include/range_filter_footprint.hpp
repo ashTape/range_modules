@@ -17,14 +17,14 @@ class SubFootprint {
 private:
   ros::Subscriber sub_;
   geometry_msgs::PolygonStamped footprint_;
-  int counter_footprint_;
+  bool flag_footprint_;
 
 public:
   SubFootprint(){};
   ~SubFootprint() { ROS_INFO("Finigh Getting Footprint"); };
   SubFootprint(ros::NodeHandle &, const std::string &);
   void callback(const geometry_msgs::PolygonStamped::ConstPtr &);
-  int getCounter() const;
+  bool getFlag() const;
   geometry_msgs::PolygonStamped getFootprint() const;
 }; // End of class
 
@@ -39,7 +39,7 @@ private:
   tf2_ros::Buffer *ptfBuffer_;
   std::string frame_;
   float threshold_;
-  int counter_;
+  bool flag_;
   RangeFilterFootprint(const RangeFilterFootprint &); // Prohibit to copy
   RangeFilterFootprint &
   operator=(const RangeFilterFootprint &); // Prohibit to substitute
@@ -47,8 +47,8 @@ private:
 public:
   RangeFilterFootprint() {}
   ~RangeFilterFootprint() { delete pSF_; }
-  RangeFilterFootprint(ros::NodeHandle &, const std::string &,
-                       SubFootprint &, tf2_ros::Buffer &);
+  RangeFilterFootprint(ros::NodeHandle &, const std::string &, SubFootprint &,
+                       tf2_ros::Buffer &);
   void publish();
   void callback(const sensor_msgs::Range::ConstPtr &);
   sensor_msgs::Range filterFootprint(const sensor_msgs::Range &);
@@ -59,20 +59,18 @@ public:
 SubFootprint::SubFootprint(ros::NodeHandle &nh,
                            const std::string &footprint_topic) {
   sub_ = nh.subscribe(footprint_topic, 10, &SubFootprint::callback, this);
-  counter_footprint_ = 0;
+  flag_footprint_ = false;
 };
 
 void SubFootprint::callback(
     const geometry_msgs::PolygonStamped::ConstPtr &msg) {
-  if (msg != nullptr) {
-    if (counter_footprint_ == 0) {
-      footprint_ = *msg;
-      counter_footprint_++;
-    }
+  if (flag_footprint_ == false) {
+    footprint_ = *msg;
+    flag_footprint_ = true;
   }
 }
 
-int SubFootprint::getCounter() const { return counter_footprint_; }
+bool SubFootprint::getFlag() const { return flag_footprint_; }
 
 geometry_msgs::PolygonStamped SubFootprint::getFootprint() const {
   return footprint_;
@@ -85,47 +83,27 @@ RangeFilterFootprint::RangeFilterFootprint(
   pub_ = nh.advertise<sensor_msgs::Range>(range_topic + "_filtered", 10);
   pSF_ = &SF;
   ptfBuffer_ = &tfBuffer_;
-  counter_ = 0;
+  flag_ = false;
 
-} // End of Constructor
-
-RangeFilterFootprint::RangeFilterFootprint(
-    const RangeFilterFootprint &RF) { // Copy Constructor
-  sub_ = RF.sub_;
-  pub_ = RF.pub_;
-  pSF_ = RF.pSF_;
-  range_msg_ = RF.range_msg_;
-  footprint_ = RF.footprint_;
-  tf_sonar_ = RF.tf_sonar_;
-  frame_ = RF.frame_;
-  threshold_ = RF.threshold_;
-  counter_ = RF.counter_;
 } // End of Copy Constructor
-
-RangeFilterFootprint &RangeFilterFootprint::
-operator=(const RangeFilterFootprint &RFF) {
-  return *this;
-}
 
 void RangeFilterFootprint::publish() {
   pub_.publish(filterFootprint(range_msg_));
 }
 
 void RangeFilterFootprint::callback(const sensor_msgs::Range::ConstPtr &msg) {
-  if (msg != nullptr) {
-    if (pSF_->getCounter() != 0) {
-      if (counter_ == 0) {
-        frame_ = msg->header.frame_id.substr(1); // exclude "/"
-        footprint_ = pSF_->getFootprint();
-        setSonarTF();
-        setThreshold();
-        counter_++;
-        ROS_INFO("[%s] (%s) Threshold : %f", ros::this_node::getName().c_str(),
-                 frame_.c_str(), threshold_);
-      }
-      range_msg_ = *msg;
-      publish();
+  if (pSF_->getFlag() == true) {
+    if (flag_ == false) {
+      frame_ = msg->header.frame_id.substr(1); // exclude "/"
+      footprint_ = pSF_->getFootprint();
+      setSonarTF();
+      setThreshold();
+      flag_ = true;
+      ROS_INFO("[%s] (%s) Threshold : %f", ros::this_node::getName().c_str(),
+               frame_.c_str(), threshold_);
     }
+    range_msg_ = *msg;
+    publish();
   }
 }
 
