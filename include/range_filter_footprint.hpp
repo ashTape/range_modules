@@ -38,7 +38,7 @@ private:
   geometry_msgs::TransformStamped tf_sonar_;
   tf2_ros::Buffer *ptfBuffer_;
   std::string frame_;
-  float threshold_;
+  std::float_t threshold_, offset_;
   bool flag_;
   RangeFilterFootprint(const RangeFilterFootprint &); // Prohibit to copy
   RangeFilterFootprint &
@@ -48,7 +48,7 @@ public:
   RangeFilterFootprint() {}
   ~RangeFilterFootprint() { delete pSF_; }
   RangeFilterFootprint(ros::NodeHandle &, const std::string &, SubFootprint &,
-                       tf2_ros::Buffer &);
+                       tf2_ros::Buffer &, const std::float_t &);
   void publish();
   void callback(const sensor_msgs::Range::ConstPtr &);
   sensor_msgs::Range filterFootprint(const sensor_msgs::Range &);
@@ -78,11 +78,12 @@ geometry_msgs::PolygonStamped SubFootprint::getFootprint() const {
 
 RangeFilterFootprint::RangeFilterFootprint(
     ros::NodeHandle &nh, const std::string &range_topic, SubFootprint &SF,
-    tf2_ros::Buffer &tfBuffer_) { // Constructor
+    tf2_ros::Buffer &tfBuffer_, const std::float_t &offset) { // Constructor
   sub_ = nh.subscribe(range_topic, 10, &RangeFilterFootprint::callback, this);
   pub_ = nh.advertise<sensor_msgs::Range>(range_topic + "_filtered", 10);
   pSF_ = &SF;
   ptfBuffer_ = &tfBuffer_;
+  offset_ = offset;
   flag_ = false;
 
 } // End of Copy Constructor
@@ -110,8 +111,8 @@ void RangeFilterFootprint::callback(const sensor_msgs::Range::ConstPtr &msg) {
 sensor_msgs::Range
 RangeFilterFootprint::filterFootprint(const sensor_msgs::Range &msg) {
   sensor_msgs::Range range_filtered_ = msg;
-  if (range_filtered_.range <= threshold_) {
-    range_filtered_.range = threshold_;
+  if (range_filtered_.range <= threshold_ + offset_) {
+    range_filtered_.range = threshold_ + offset_;
   }
   return range_filtered_;
 }
@@ -173,7 +174,7 @@ void RangeFilterFootprint::setThreshold() {
   }
 
   threshold_ =
-      static_cast<float>(*min_element(threshold.begin(), threshold.end()));
+      static_cast<std::float_t>(*min_element(threshold.begin(), threshold.end()));
 }
 
 } // End of namespace

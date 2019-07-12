@@ -1,9 +1,11 @@
 <launch>
     <arg name="range_topics"    default="[/sonar/left_side, /sonar/left_oblique, /sonar/left_front, /sonar/right_front, /sonar/right_oblique, /sonar/right_side]" />
-    <arg name="footprint_topic" default="/move_base/local_costmap/footprint"/>
+    <arg name="footprint_topic" default="/move_base/local_costmap/footprint" />
+    <arg name="offset"          default="0.1" />
 
     <node name="range_filter_footprint" pkg="range_modules" type="range_filter_footprint" output="screen">
         <param name="footprint_topic"  value="$(arg footprint_topic)"/>
+        <param name="offset"           value="$(arg offset)" />
         <rosparam param="range_topics" subst_value="True">
             $(arg range_topics)
         </rosparam>
