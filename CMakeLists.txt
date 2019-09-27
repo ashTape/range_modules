@@ -3,9 +3,6 @@ project(range_modules)
 
 add_compile_options(-std=c++11)
 
-################################################################################
-# Packages
-################################################################################
 find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
@@ -14,46 +11,36 @@ find_package(catkin REQUIRED COMPONENTS
   tf2_ros
 )
 
-################################################################################
-# Catkin specific configuration
-################################################################################
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES ${PROJECT_NAME}
   CATKIN_DEPENDS roscpp sensor_msgs geometry_msgs tf2 tf2_ros
 )
 
-#########################################################################rectories(
 include_directories(
   include
   ${catkin_INCLUDE_DIRS}
 )
 
-add_executable(range_to_laserscan src/range_to_laserscan.cpp)
-add_dependencies(range_to_laserscan ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(range_to_laserscan ${catkin_LIBRARIES})
+function(custom_library target)
+  add_library(${target}_lib src/${target}.cpp)
+  add_dependencies(${target}_lib ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+  target_link_libraries(${target}_lib ${catkin_LIBRARIES})  
+endfunction()
 
-add_executable(range_filter_footprint src/range_filter_footprint.cpp)
-add_dependencies(range_filter_footprint ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
-target_link_libraries(range_filter_footprint ${catkin_LIBRARIES})
+function(custom_executable target)
+  add_executable(${target}_node src/${target}_node.cpp)
+  add_dependencies(${target}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS} ${target}_lib)
+  target_link_libraries(${target}_node ${catkin_LIBRARIES} ${target}_lib)
+  install(TARGETS ${target}_node RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION})
+endfunction()
 
-################################################################################
-# Install
-################################################################################
-install(TARGETS range_to_laserscan
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
-install(TARGETS range_filter_footprint
-  RUNTIME DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-)
+file(GLOB MY_SOURCES "include/*.hpp")
+foreach(source IN LISTS MY_SOURCES)
+  get_filename_component(name ${source} NAME_WE) 
+  custom_library(${name})
+  custom_executable(${name})
+endforeach()   
 
-install(DIRECTORY include/
-  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-)
-install(DIRECTORY launch/
-  DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION}/launch
-)
-
-################################################################################
-# Test
-################################################################################
+install(DIRECTORY include/ DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION})
+install(DIRECTORY launch/ DESTINATION ${CATKIN_PACKAGE_SHARE_DESTINATION})            
