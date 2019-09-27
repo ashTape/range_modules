@@ -1,25 +1,44 @@
 #include "range_to_laserscan.hpp"
 
-int main(int argc, char **argv) {
-  ros::init(argc, argv, "range_to_laserscan");
-  ROS_INFO("[%s] Node Init", ros::this_node::getName().c_str());
+namespace range_to_laserscan {
 
-  ros::NodeHandle nh;
-  ros::Publisher pub;
+RangeToLaserScan::RangeToLaserScan(){
+    ROS_ERROR("RangeToLaserScan Class needs arguments!");
+}
 
-  pub = nh.advertise<sensor_msgs::LaserScan>("/scan_sonar", 10);
+RangeToLaserScan::RangeToLaserScan(ros::NodeHandle &nh, ros::Publisher &pub,
+                   const std::string &range_topic) {
+    sub_ = nh.subscribe(range_topic, 10, &RangeToLaserScan::callback, this);
+    pub_ = pub;
+    initSonarLaserScan();
+}
 
-  std::vector<std::string> sub_topic = {"/range"};
-  std::vector<std::string> range_topics = nh.param<std::vector<std::string>>(
-      ros::this_node::getName() + "/range_topics", {"/range_topic"});
+RangeToLaserScan::~RangeToLaserScan() {}
 
-  std::vector<RangeToLaserScan *> RTL(range_topics.size());
+void RangeToLaserScan::callback(const sensor_msgs::Range::ConstPtr &msg) {
+    buf0 = buf1;       // Buffer for rejecting noises
+    buf1 = buf2;       // Buffer for rejecting noises
+    buf2 = msg->range; // Buffer for rejecting noises
 
-  for (int i = 0; i < range_topics.size(); i++) {
-    RTL[i] = new RangeToLaserScan(nh, pub, range_topics[i]);
-    ROS_INFO("[%s] Subscribe for %s", ros::this_node::getName().c_str(),
-             range_topics[i].c_str());
-  }
+    if (std::max({buf0, buf1, buf2}) < msg->max_range) { // Rejecting noises
+      scan_sonar_.header = msg->header;
+      scan_sonar_.range_min = msg->min_range;
+      scan_sonar_.range_max = msg->max_range;
 
-  ros::spin();
-};
+      std::vector<float> vec(3, msg->range); // Fake
+      scan_sonar_.ranges = vec;
+      pub_.publish(scan_sonar_);
+    } else {
+      return;
+    }
+}
+
+void RangeToLaserScan::initSonarLaserScan() {
+    scan_sonar_.angle_min = -0.0005;
+    scan_sonar_.angle_max = 0.0005;
+    scan_sonar_.angle_increment = 0.00025;
+    scan_sonar_.time_increment = 0.01;
+    scan_sonar_.scan_time = 0.01;
+}
+
+} //End of namespace
